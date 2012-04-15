@@ -1,5 +1,6 @@
 var restify = require('restify');
 var Logger = require('bunyan');
+var mongo = require('mongodb');
 
 var server = restify.createServer({
   name: '15-minutes',
@@ -49,6 +50,28 @@ server.get({path: '/aroundme/:location', name: 'AroundMe'}, function respond(req
   Top10
   
 */
+
+var dbconn = null;
+
+mongo.connect('mongodb://127.0.0.1:27017/test', function(err, conn) {
+  if(err) {
+    console.log(err.stack);
+  }
+  dbconn = conn;
+});
+
+server.get('/write', function(req, res, next) {
+
+    dbconn.collection('foo', function(err, collection) {
+      var thing = {'x': 5, 'y': 10};
+      collection.insert(thing, {safe:true}, function(err) {
+        if(err) { console.log("Error writing stuff",err.stack); return; }
+      })
+    });
+    // conn.close();
+
+  res.send('wrote');
+});
 
 server.get('/isup', function(req, res, next) {
   res.send('running');
