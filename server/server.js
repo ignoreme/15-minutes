@@ -1,6 +1,7 @@
 var restify = require('restify');
 var Logger = require('bunyan');
 var mongo = require('mongodb');
+var v = require('./validation');
 
 var dbconn = null;
 mongo.connect('mongodb://127.0.0.1:27017/test', function(err, conn) {
@@ -37,7 +38,6 @@ server.use(restify.queryParser());
 server.use(restify.bodyParser());
 
 server.get({path: '/aroundme/:location', name: 'AroundMe'}, function respond(req, res, next) {
-  
   // example logging...
   // req.log.info({params: req.params}, 'Hello there %s', 'foo');
 
@@ -95,24 +95,13 @@ server.put('/profile/:id', function update_profile(req, res, next) {
 
 server.post('/profile/:id', function create_profile(req, res, next) {
   
-  if ( !req.params.id || !req.params.id.match(/^[a-zA-Z0-9_\-]+$/) ) {
-    return next(new restify.InvalidArgumentError("Invalid id " + req.params.id));
-  }
+  var validators = [v.valid_id, v.valid_name, v.valid_sex, v.valid_dateofbirth, v.valid_deviceid];
   
-  if ( !req.params.name || !req.params.name.match(/^.+$/) ) {
-    return next(new restify.InvalidArgumentError("Invalid name " + req.params.name));
-  }
-  
-  if ( !req.params.sex || !req.params.sex.match(/^[mf]$/) ) {
-    return next(new restify.InvalidArgumentError("Invalid sex " + req.params.sex));
-  }
-  
-  if ( !req.params.dateofbirth || !req.params.dateofbirth.match(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/) ) {
-    return next(new restify.InvalidArgumentError("Invalid date of birth " + req.params.dateofbirth));
-  }
-  
-  if ( !req.params.deviceid ) {
-    return next(new restify.InvalidArgumentError("Device ID required"));
+  for ( var i = 0; i < validators.length; i++ ) {
+    var check = validators[i](req);
+    if (!check[0]) {
+      return next(new restify.InvalidArgumentError(check[1]));
+    }
   }
   
   dbconn.collection('profiles', function(err, collection) {

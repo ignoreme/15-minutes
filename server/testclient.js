@@ -9,6 +9,6 @@ client.put('/profile/nobby-clarkX', { name: 'Nobby Clarky', sex: 'm', dateofbirt
   console.log(JSON.stringify(obj, null, 2));
 });
 
-client.post('/profile/nobby-clarky', { name: 'Nobby Clarky', sex: 'm', dateofbirth: '1985-06-01', deviceid: '123abc' }, function(err, req, res, obj) {
+client.post('/profile/nobby-clarkz', { name: 'Nobby Clarky', sex: 'm', dateofbirth: '1985-06-01', deviceid: '123abc' }, function(err, req, res, obj) {
   console.log(JSON.stringify(obj, null, 2));
 });
