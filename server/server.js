@@ -80,11 +80,53 @@ server.get({path: '/aroundme/:location', name: 'AroundMe'}, function respond(req
 
 server.put('/profile/:id', function update_profile(req, res, next) {
   
+  var validators = [v.valid_id, v.valid_name, v.valid_sex, v.valid_dateofbirth, v.valid_deviceid];
+  
+  for ( var i = 0; i < validators.length; i++ ) {
+    var check = validators[i](req);
+    if (!check[0]) {
+      return next(new restify.InvalidArgumentError(check[1]));
+    }
+  }
+  
   dbconn.collection('profiles', function(err, collection) {
     collection.findOne({id: req.params.id}, function(err, document) {
       if ( document ) {
-        res.json(200, document);
-        return next();
+        
+        var params = ['name', 'sex', 'dateofbirth'];
+        
+        for ( var i = 0; i < params.length; i++ ) {
+          if ( req.params[params[i]] ) {
+            document[params[i]] = req.params[params[i]];
+          }
+        }
+        
+        if ( !document.devices ) {
+          document.devices = [];
+        }
+        
+        var new_device = true;
+        for ( var i = 0; i < document.devices.length; i++ ) {
+          if ( document.devices[i] == req.params['deviceid'] ) {
+            new_device = false;
+          }
+        }
+        
+        if ( new_device ) {
+          document['devices'].push(req.params['deviceid']);
+        }
+        
+        collection.update({id: req.params.id}, document, {safe:true, multi: false}, function(err) {
+          
+          if(err) {
+            req.log.error("Error updating profile",err.stack);
+            return next(new restify.InternalError("Error update profile with id " + req.params.id));
+          } else {
+            res.json(201, {'result':'Profile ' + req.params.id + ' updated'});
+            return next();
+          }
+        });
+        
       } else {
         return next(new restify.ResourceNotFoundError('Nothing found with ID ' + req.params.id));
       }
@@ -133,7 +175,7 @@ server.post('/profile/:id', function create_profile(req, res, next) {
   
 });
 
-server.get('/profiles/:id', function get_profile(req, res, next) {
+server.get('/profile/:id', function get_profile(req, res, next) {
   
   dbconn.collection('profiles', function(err, collection) {
     collection.findOne({id: req.params.id}, function(err, document) {
@@ -146,19 +188,6 @@ server.get('/profiles/:id', function get_profile(req, res, next) {
     });
   });
   
-});
-
-server.get('/write', function(req, res, next) {
-
-  dbconn.collection('foo', function(err, collection) {
-    var thing = {'x': 5, 'y': 10};
-    collection.insert(thing, {safe:true}, function(err) {
-      if(err) { console.log("Error writing stuff",err.stack); return; }
-    })
-  });
-    // conn.close();
-
-  res.send('wrote');
 });
 
 server.get('/isup', function(req, res, next) {

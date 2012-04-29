@@ -5,7 +5,7 @@ var client = restify.createJsonClient({
   version: '*'
 });
 
-client.put('/profile/nobby-clarkX', { name: 'Nobby Clarky', sex: 'm', dateofbirth: '1985-06-01', deviceid: '123abc' }, function(err, req, res, obj) {
+client.put('/profile/nobby-clark', { name: 'Nobby Clarky', sex: 'm', dateofbirth: '1985-06-01', deviceid: '123abc' }, function(err, req, res, obj) {
   console.log(JSON.stringify(obj, null, 2));
 });
 
