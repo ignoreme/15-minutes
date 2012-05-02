@@ -35,7 +35,8 @@ server.use(restify.bodyParser());
 server.get('/explore/around', explore.around);
 server.get('/explore/ranking', explore.ranking);
 server.get('/explore/random', explore.random);
-
+server.get('/explore/who_likes_profile', explore.who_likes_profile);
+server.get('/explore/profile_likes_who', explore.profile_likes_who);
 
 // Location
 server.put('/location/checkin', location.checkin);
